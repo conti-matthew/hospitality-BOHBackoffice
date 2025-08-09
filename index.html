@@ -1,5 +1,6 @@
 import React, { useState, createContext, useContext } from 'react';
 import { Calendar, Clock, Bell, ChefHat, CircleUser, Home, LineChart, Menu, Package, ShoppingCart, DollarSign, ClipboardList, Settings, Trash2, Edit, Download, MessageSquare, BarChart2 } from 'lucide-react';
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 // Mock Data - In a real app, this would come from a database
 const initialMenu = [
@@ -76,6 +77,8 @@ export default function App() {
         return <TimecardPage />;
       case 'Financials':
         return <FinancialsPage />;
+      case 'Announcements':
+        return <AnnouncementsPage />;
       case 'Settings':
         return <SettingsPage />;
       default:
@@ -109,6 +112,7 @@ function Sidebar() {
     { name: 'Schedule', icon: Calendar },
     { name: 'Timecards', icon: Clock },
     { name: 'Financials', icon: BarChart2 },
+    { name: 'Announcements', icon: MessageSquare },
     { name: 'Settings', icon: Settings },
   ];
 
@@ -116,7 +120,7 @@ function Sidebar() {
     <div className="hidden border-r bg-white dark:bg-gray-900 md:block">
       <div className="flex h-full max-h-screen flex-col gap-2">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <a href="/" className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+          <a href="#" className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
             <ChefHat className="h-6 w-6" />
             <span>RestoFlow</span>
           </a>
@@ -146,47 +150,48 @@ function Sidebar() {
 
 // Header Component
 function Header() {
-    const { setActivePage } = useContext(AppContext);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { activePage, setActivePage } = useContext(AppContext);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    const navItems = [
-        { name: 'Dashboard', icon: Home },
-        { name: 'Orders', icon: ShoppingCart },
-        { name: 'Menu', icon: ClipboardList },
-        { name: 'Inventory', icon: Package },
-        { name: 'Schedule', icon: Calendar },
-        { name: 'Timecards', icon: Clock },
-        { name: 'Financials', icon: BarChart2 },
-        { name: 'Settings', icon: Settings },
-    ];
+  const navItems = [
+    { name: 'Dashboard', icon: Home },
+    { name: 'Orders', icon: ShoppingCart },
+    { name: 'Menu', icon: ClipboardList },
+    { name: 'Inventory', icon: Package },
+    { name: 'Schedule', icon: Calendar },
+    { name: 'Timecards', icon: Clock },
+    { name: 'Financials', icon: BarChart2 },
+    { name: 'Announcements', icon: MessageSquare },
+    { name: 'Settings', icon: Settings },
+  ];
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-white px-4 lg:h-[60px] lg:px-6 dark:bg-gray-900">
-        <button
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-            <Menu className="h-6 w-6 text-gray-900 dark:text-white" />
-        </button>
-        {isMobileMenuOpen && (
-            <div className="absolute top-14 left-0 w-full bg-white dark:bg-gray-900 md:hidden z-20">
-                 <nav className="grid gap-2 p-4">
-                    {navItems.map(item => (
-                      <button
-                        key={item.name}
-                        onClick={() => {
-                            setActivePage(item.name);
-                            setIsMobileMenuOpen(false);
-                        }}
-                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 dark:text-white transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {item.name}
-                      </button>
-                    ))}
-                 </nav>
-            </div>
-        )}
+      <button
+        className="md:hidden"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        <Menu className="h-6 w-6 text-gray-900 dark:text-white" />
+      </button>
+      {isMobileMenuOpen && (
+        <div className="absolute top-14 left-0 w-full bg-white dark:bg-gray-900 md:hidden z-20">
+          <nav className="grid gap-2 p-4">
+            {navItems.map(item => (
+              <button
+                key={item.name}
+                onClick={() => {
+                  setActivePage(item.name);
+                  setIsMobileMenuOpen(false);
+                }}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 dark:text-white transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                <item.icon className="h-4 w-4" />
+                {item.name}
+              </button>
+            ))}
+          </nav>
+        </div>
+      )}
       <div className="w-full flex-1">
         {/* Search can be added here if needed */}
       </div>
@@ -214,30 +219,30 @@ function Dashboard() {
   return (
     <div className="animate-fade-in">
         <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-            <Card
-                title="Total Revenue"
-                icon={<DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-                value={`$${totalSales.toFixed(2)}`}
-                description="Total sales from completed orders"
-            />
-            <Card
-                title="New Orders"
-                icon={<ShoppingCart className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-                value={newOrders}
-                description="Orders waiting for confirmation"
-            />
-            <Card
-                title="In Progress"
-                icon={<ChefHat className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-                value={preparingOrders}
-                description="Orders currently being prepared"
-            />
-            <Card
-                title="Most Popular Item"
-                icon={<LineChart className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-                value={popularItem}
-                description="Top-selling item this month"
-            />
+          <Card
+            title="Total Revenue"
+            icon={<DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+            value={`$${totalSales.toFixed(2)}`}
+            description="Total sales from completed orders"
+          />
+          <Card
+            title="New Orders"
+            icon={<ShoppingCart className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+            value={newOrders}
+            description="Orders waiting for confirmation"
+          />
+          <Card
+            title="In Progress"
+            icon={<ChefHat className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+            value={preparingOrders}
+            description="Orders currently being prepared"
+          />
+          <Card
+            title="Most Popular Item"
+            icon={<LineChart className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
+            value={popularItem}
+            description="Top-selling item this month"
+          />
         </div>
         <div className="mt-6 grid gap-6 md:grid-cols-2">
             <Announcements />
@@ -279,6 +284,12 @@ function Dashboard() {
 function Orders() {
   const [orders, setOrders] = useState(initialOrders);
   
+  const handleStatusChange = (orderId, newStatus) => {
+    setOrders(orders.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+  };
+
   return (
     <div className="animate-fade-in">
         <div className="flex justify-between items-center mb-4">
@@ -308,7 +319,8 @@ function Orders() {
                                 <td className="px-6 py-4"><StatusBadge status={order.status} /></td>
                                 <td className="px-6 py-4">
                                     <select 
-                                        defaultValue={order.status}
+                                        value={order.status}
+                                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
                                         className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                                     >
                                         <option>New</option>
@@ -331,9 +343,17 @@ function Orders() {
 // Menu Management Page Component
 function MenuPage() {
     const [menuItems, setMenuItems] = useState(initialMenu);
+    const [newItem, setNewItem] = useState({ name: '', category: '', price: '', cost: '', stock: '', image: '' });
 
     const deleteItem = (id) => {
         setMenuItems(menuItems.filter(item => item.id !== id));
+    };
+
+    const handleAddItem = (e) => {
+        e.preventDefault();
+        const newId = menuItems.length > 0 ? Math.max(...menuItems.map(item => item.id)) + 1 : 1;
+        setMenuItems([...menuItems, { ...newItem, id: newId, price: parseFloat(newItem.price), cost: parseFloat(newItem.cost), stock: parseInt(newItem.stock) }]);
+        setNewItem({ name: '', category: '', price: '', cost: '', stock: '', image: '' });
     };
 
     return (
@@ -341,12 +361,24 @@ function MenuPage() {
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Menu</h1>
                  <div className="flex items-center gap-2">
-                    <ExportButton />
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors flex items-center gap-2">
-                        Add New Item
-                    </button>
+                    <ExportButton data={menuItems} filename="menu_items" />
+                    {/* Placeholder for Add Item button - could be a modal */}
                 </div>
             </div>
+             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm mb-6 p-4">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Add New Menu Item</h3>
+                <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Item Name" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="text" value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} placeholder="Category" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="number" value={newItem.price} onChange={(e) => setNewItem({...newItem, price: e.target.value})} placeholder="Price" step="0.01" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="number" value={newItem.cost} onChange={(e) => setNewItem({...newItem, cost: e.target.value})} placeholder="Cost" step="0.01" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="number" value={newItem.stock} onChange={(e) => setNewItem({...newItem, stock: e.target.value})} placeholder="Stock" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="text" value={newItem.image} onChange={(e) => setNewItem({...newItem, image: e.target.value})} placeholder="Image URL (optional)" className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
+                         Add New Item
+                    </button>
+                </form>
+             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
                  <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
@@ -365,7 +397,7 @@ function MenuPage() {
                                 <tr key={item.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <img src={item.image} alt={item.name} className="w-10 h-10 rounded-md object-cover" />
+                                            <img src={item.image || 'https://placehold.co/100x100/eeeeee/333333?text=N/A'} alt={item.name} className="w-10 h-10 rounded-md object-cover" />
                                             <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
                                         </div>
                                     </td>
@@ -392,17 +424,38 @@ function MenuPage() {
 // Inventory Management Page Component
 function Inventory() {
     const [inventoryItems, setInventoryItems] = useState(initialInventory);
+    const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '', lowStock: '' });
+
+    const deleteItem = (id) => {
+        setInventoryItems(inventoryItems.filter(item => item.id !== id));
+    };
+
+    const handleAddItem = (e) => {
+        e.preventDefault();
+        const newId = inventoryItems.length > 0 ? Math.max(...inventoryItems.map(item => item.id)) + 1 : 1;
+        setInventoryItems([...inventoryItems, { ...newItem, id: newId, quantity: parseInt(newItem.quantity), lowStock: parseInt(newItem.lowStock) }]);
+        setNewItem({ name: '', quantity: '', unit: '', lowStock: '' });
+    };
     
     return (
         <div className="animate-fade-in">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Inventory</h1>
                 <div className="flex items-center gap-2">
-                    <ExportButton />
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
+                    <ExportButton data={inventoryItems} filename="inventory_report" />
+                </div>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm mb-6 p-4">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Add New Ingredient</h3>
+                 <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ingredient Name" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="number" value={newItem.quantity} onChange={(e) => setNewItem({...newItem, quantity: e.target.value})} placeholder="Quantity" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="text" value={newItem.unit} onChange={(e) => setNewItem({...newItem, unit: e.target.value})} placeholder="Unit (e.g., kg, units)" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <input type="number" value={newItem.lowStock} onChange={(e) => setNewItem({...newItem, lowStock: e.target.value})} placeholder="Low Stock Threshold" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
                         Add Ingredient
                     </button>
-                </div>
+                </form>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
                 <div className="overflow-x-auto">
@@ -430,7 +483,7 @@ function Inventory() {
                                     <td className="px-6 py-4">
                                         <div className="flex gap-2">
                                             <button className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"><Edit className="w-4 h-4" /></button>
-                                            <button className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
+                                            <button onClick={() => deleteItem(item.id)} className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -563,7 +616,7 @@ function TimecardPage() {
     );
 }
 
-// Financials Page Component
+// Financials Page Component - Completed
 function FinancialsPage() {
     const completedOrders = initialOrders.filter(o => o.status === 'Completed');
     const grossSales = completedOrders.reduce((sum, order) => sum + order.total, 0);
@@ -572,12 +625,29 @@ function FinancialsPage() {
         return sum + orderCost;
     }, 0);
     const netProfit = grossSales - cogs;
+    
+    // Aggregate sales data by item category for the chart
+    const salesByCategory = completedOrders.reduce((acc, order) => {
+        order.items.forEach(item => {
+            const menuItem = initialMenu.find(m => m.name === item.name);
+            if (menuItem) {
+                const category = menuItem.category;
+                acc[category] = (acc[category] || 0) + item.price;
+            }
+        });
+        return acc;
+    }, {});
+
+    const chartData = Object.keys(salesByCategory).map(category => ({
+        name: category,
+        sales: salesByCategory[category]
+    }));
 
     return (
         <div className="animate-fade-in">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Financials</h1>
-                <ExportButton />
+                <ExportButton data={completedOrders} filename="financials_report" />
             </div>
             <div className="grid gap-4 md:grid-cols-3 mb-6">
                  <Card
@@ -599,9 +669,20 @@ function FinancialsPage() {
                     description="Gross Sales - COGS"
                 />
             </div>
-             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
-                <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Sales Breakdown</h3>
-                 <div className="overflow-x-auto">
+             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-6">
+                <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Sales Breakdown by Category</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={chartData}>
+                        <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                        <Tooltip />
+                        <Bar dataKey="sales" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
+                 <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Detailed Sales Report</h3>
+                <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
@@ -614,21 +695,72 @@ function FinancialsPage() {
                         </thead>
                         <tbody>
                             {completedOrders.map(order => {
-                                const orderCost = order.items.reduce((sum, item) => sum + item.cost, 0);
-                                const profit = order.total - orderCost;
+                                const orderCost = order.items.reduce((itemSum, item) => itemSum + item.cost, 0);
+                                const orderProfit = order.total - orderCost;
                                 return (
-                                <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
-                                    <td className="px-6 py-4">{order.date.toLocaleDateString()}</td>
-                                    <td className="px-6 py-4">${order.total.toFixed(2)}</td>
-                                    <td className="px-6 py-4">${orderCost.toFixed(2)}</td>
-                                    <td className="px-6 py-4 font-medium text-green-600 dark:text-green-400">${profit.toFixed(2)}</td>
-                                </tr>
-                                )
+                                    <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
+                                        <td className="px-6 py-4">{order.date.toLocaleString()}</td>
+                                        <td className="px-6 py-4">${order.total.toFixed(2)}</td>
+                                        <td className="px-6 py-4">${orderCost.toFixed(2)}</td>
+                                        <td className="px-6 py-4">${orderProfit.toFixed(2)}</td>
+                                    </tr>
+                                );
                             })}
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    );
+}
+
+// Announcements Page Component
+function AnnouncementsPage() {
+    const [announcements, setAnnouncements] = useState(initialAnnouncements);
+    const [newAnnouncement, setNewAnnouncement] = useState('');
+
+    const handlePostAnnouncement = (e) => {
+        e.preventDefault();
+        if (newAnnouncement.trim()) {
+            const newId = announcements.length > 0 ? Math.max(...announcements.map(a => a.id)) + 1 : 1;
+            setAnnouncements([
+                { id: newId, author: 'Manager', message: newAnnouncement, timestamp: new Date() },
+                ...announcements,
+            ]);
+            setNewAnnouncement('');
+        }
+    };
+
+    return (
+        <div className="animate-fade-in">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Announcements</h1>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-6">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Post a New Announcement</h3>
+                <form onSubmit={handlePostAnnouncement} className="flex flex-col sm:flex-row gap-2">
+                    <input 
+                        type="text" 
+                        value={newAnnouncement}
+                        onChange={(e) => setNewAnnouncement(e.target.value)}
+                        placeholder="Type your announcement here..."
+                        className="flex-1 rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                        required
+                    />
+                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
+                        Post
+                    </button>
+                </form>
+            </div>
+            <div className="space-y-4">
+                {announcements.map(announcement => (
+                    <div key={announcement.id} className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
+                        <div className="flex justify-between items-center mb-1">
+                            <span className="font-semibold text-gray-900 dark:text-white">{announcement.author}</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{announcement.timestamp.toLocaleString()}</span>
+                        </div>
+                        <p className="text-gray-700 dark:text-gray-300">{announcement.message}</p>
+                    </div>
+                ))}
             </div>
         </div>
     );
@@ -640,87 +772,92 @@ function SettingsPage() {
     return (
         <div className="animate-fade-in">
             <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Settings</h1>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6 max-w-2xl">
-                <div className="space-y-6">
-                    <div>
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Restaurant Profile</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Update your restaurant's public details.</p>
-                        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                                <label htmlFor="restaurant-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Restaurant Name</label>
-                                <input type="text" id="restaurant-name" defaultValue="RestoFlow Demo" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm" />
-                            </div>
-                            <div>
-                                <label htmlFor="restaurant-contact" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Contact Email</label>
-                                <input type="email" id="restaurant-contact" defaultValue="contact@restoflow.com" className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm" />
-                            </div>
-                        </div>
-                    </div>
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notifications</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Manage how you receive notifications.</p>
-                        <div className="mt-4 space-y-2">
-                            <div className="flex items-center">
-                                <input id="new-order-email" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" defaultChecked />
-                                <label htmlFor="new-order-email" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">Email for new orders</label>
-                            </div>
-                            <div className="flex items-center">
-                                <input id="low-stock-email" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" defaultChecked />
-                                <label htmlFor="low-stock-email" className="ml-2 block text-sm text-gray-900 dark:text-gray-300">Email for low stock alerts</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="flex justify-end">
-                        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
-                            Save Changes
-                        </button>
-                    </div>
-                </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
+                <p className="text-gray-700 dark:text-gray-300">Settings and configuration options would go here. For example, managing user roles, notification preferences, or business details.</p>
             </div>
         </div>
     );
 }
 
-
-// Reusable Components
-function Card({ title, icon, value, description }) {
-  return (
-    <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm">
-      <div className="flex flex-row items-center justify-between pb-2">
-        <h3 className="text-sm font-medium text-gray-600 dark:text-gray-300">{title}</h3>
-        {icon}
-      </div>
-      <div>
-        <div className="text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
-        <p className="text-xs text-gray-500 dark:text-gray-400">{description}</p>
-      </div>
-    </div>
-  );
+// Helper Components
+function Card({ title, value, description, icon }) {
+    return (
+        <div className="rounded-lg border bg-white text-card-foreground shadow-sm dark:bg-gray-900 p-6">
+            <div className="flex justify-between items-center pb-2">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
+                {icon}
+            </div>
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+        </div>
+    );
 }
 
 function StatusBadge({ status }) {
-    const baseClasses = "text-xs font-medium me-2 px-2.5 py-0.5 rounded-full";
-    const statusClasses = {
-        New: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-        Preparing: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-        Completed: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-        Ready: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
-        Cancelled: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300",
-    };
-    return <span className={`${baseClasses} ${statusClasses[status] || statusClasses.Cancelled}`}>{status}</span>;
+    let colorClass = '';
+    switch (status) {
+        case 'New':
+            colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            break;
+        case 'Preparing':
+            colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+            break;
+        case 'Ready':
+            colorClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            break;
+        case 'Completed':
+            colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+            break;
+        case 'Cancelled':
+            colorClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            break;
+        default:
+            colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    }
+    return (
+        <span className={`text-xs font-medium me-2 px-2.5 py-0.5 rounded-full ${colorClass}`}>
+            {status}
+        </span>
+    );
 }
 
-function ExportButton() {
+function ExportButton({ data, filename }) {
     const handleExport = () => {
-        // In a real app, this would trigger a download or API call to Google Sheets
-        console.log("Exporting data...");
-        alert("Export functionality is a placeholder. In a real app, this would generate a CSV or print the data.");
+        if (!data || data.length === 0) {
+            console.error("No data to export.");
+            return;
+        }
+
+        // Convert data to CSV format
+        const csvRows = [];
+        const headers = Object.keys(data[0]);
+        csvRows.push(headers.join(','));
+
+        for (const row of data) {
+            const values = headers.map(header => {
+                const value = row[header];
+                const escaped = ('' + value).replace(/"/g, '""'); // Escape double quotes
+                return `"${escaped}"`;
+            });
+            csvRows.push(values.join(','));
+        }
+
+        const csvString = csvRows.join('\n');
+        const blob = new Blob([csvString], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.setAttribute('hidden', '');
+        a.setAttribute('href', url);
+        a.setAttribute('download', `${filename}.csv`);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     };
 
     return (
-        <button 
+        <button
             onClick={handleExport}
-            className="bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 px-4 py-2 rounded-lg shadow-sm hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition-colors flex items-center gap-2"
         >
             <Download className="w-4 h-4" />
             Export
@@ -728,50 +865,20 @@ function ExportButton() {
     );
 }
 
+// Announcements Component for Dashboard
 function Announcements() {
-    const [announcements, setAnnouncements] = useState(initialAnnouncements);
-    const [newMessage, setNewMessage] = useState('');
-
-    const handlePost = () => {
-        if (newMessage.trim() === '') return;
-        const newAnnouncement = {
-            id: announcements.length + 1,
-            author: 'Diana (Manager)', // Assuming the manager is posting
-            message: newMessage,
-            timestamp: new Date(),
-        };
-        setAnnouncements([newAnnouncement, ...announcements]);
-        setNewMessage('');
-    };
-
+    const [announcements, setAnnouncements] = useState(initialAnnouncements.slice(0, 3));
     return (
         <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <MessageSquare className="w-5 h-5" />
-                Staff Announcements
-            </h2>
-            <div className="space-y-3 mb-4">
-                <textarea 
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="Type your announcement here..."
-                    className="w-full p-2 border rounded-md bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500"
-                    rows="2"
-                ></textarea>
-                <button 
-                    onClick={handlePost}
-                    className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors"
-                >
-                    Post Update
-                </button>
+            <div className="flex justify-between items-center mb-3">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Announcements</h2>
+                <MessageSquare className="h-5 w-5 text-gray-500 dark:text-gray-400" />
             </div>
-            <div className="space-y-3 max-h-48 overflow-y-auto pr-2">
-                {announcements.map(ann => (
-                    <div key={ann.id} className="text-sm border-l-4 border-blue-500 pl-3">
-                        <p className="text-gray-800 dark:text-gray-200">{ann.message}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            - {ann.author} on {ann.timestamp.toLocaleDateString()}
-                        </p>
+            <div className="space-y-4">
+                {announcements.map((announcement) => (
+                    <div key={announcement.id} className="pb-2 border-b last:border-b-0 dark:border-gray-700">
+                        <p className="font-medium text-gray-900 dark:text-white">{announcement.author}: {announcement.message}</p>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{announcement.timestamp.toLocaleString()}</span>
                     </div>
                 ))}
             </div>
@@ -779,16 +886,4 @@ function Announcements() {
     );
 }
 
-// Add CSS for animations if not using a library that provides them
-const style = document.createElement('style');
-style.innerHTML = `
-  @keyframes fade-in {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-out forwards;
-  }
-`;
-document.head.appendChild(style);
-
+// SettingsPage is already defined
