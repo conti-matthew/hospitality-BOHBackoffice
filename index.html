@@ -1,889 +1,809 @@
-import React, { useState, createContext, useContext } from 'react';
-import { Calendar, Clock, Bell, ChefHat, CircleUser, Home, LineChart, Menu, Package, ShoppingCart, DollarSign, ClipboardList, Settings, Trash2, Edit, Download, MessageSquare, BarChart2 } from 'lucide-react';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RestoFlow Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: #f3f4f6; /* Consistent with Tailwind's bg-gray-100 */
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
 
-// Mock Data - In a real app, this would come from a database
-const initialMenu = [
-  { id: 1, name: 'Margherita Pizza', category: 'Pizzas', price: 12.99, cost: 4.50, stock: 50, image: 'https://placehold.co/100x100/f44336/ffffff?text=Pizza' },
-  { id: 2, name: 'Classic Burger', category: 'Burgers', price: 9.99, cost: 3.25, stock: 75, image: 'https://placehold.co/100x100/ff9800/ffffff?text=Burger' },
-  { id: 3, name: 'Caesar Salad', category: 'Salads', price: 7.99, cost: 2.50, stock: 60, image: 'https://placehold.co/100x100/4caf50/ffffff?text=Salad' },
-  { id: 4, name: 'Spaghetti Carbonara', category: 'Pastas', price: 14.50, cost: 5.00, stock: 40, image: 'https://placehold.co/100x100/2196f3/ffffff?text=Pasta' },
-];
+    <!-- React and ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel Standalone CDN for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-const initialInventory = [
-  { id: 1, name: 'Pizza Dough', quantity: 50, unit: 'units', lowStock: 20 },
-  { id: 2, name: 'Burger Buns', quantity: 100, unit: 'units', lowStock: 40 },
-  { id: 3, name: 'Lettuce', quantity: 20, unit: 'kg', lowStock: 10 },
-  { id: 4, name: 'Tomatoes', quantity: 30, unit: 'kg', lowStock: 15 },
-  { id: 5, name: 'Cheese', quantity: 25, unit: 'kg', lowStock: 10 },
-];
+    <script type="text/babel">
+        // Using global variables for mock data, consistent with the React component's initial state
+        const initialMenu = [
+            { id: 1, name: 'Margherita Pizza', category: 'Pizzas', price: 12.99, cost: 4.50, stock: 50, image: 'https://placehold.co/100x100/f44336/ffffff?text=Pizza' },
+            { id: 2, name: 'Classic Burger', category: 'Burgers', price: 9.99, cost: 3.25, stock: 75, image: 'https://placehold.co/100x100/ff9800/ffffff?text=Burger' },
+            { id: 3, name: 'Caesar Salad', category: 'Salads', price: 7.99, cost: 2.50, stock: 60, image: 'https://placehold.co/100x100/4caf50/ffffff?text=Salad' },
+            { id: 4, name: 'Spaghetti Carbonara', category: 'Pastas', price: 14.50, cost: 5.00, stock: 40, image: 'https://placehold.co/100x100/2196f3/ffffff?text=Pasta' },
+        ];
 
-const initialOrders = [
-  { id: 'ORD-001', customer: 'John Doe', items: [{name: 'Margherita Pizza', price: 12.99, cost: 4.50}, {name: 'Caesar Salad', price: 7.99, cost: 2.50}], total: 20.98, status: 'Completed', date: new Date('2023-10-27T14:00:00') },
-  { id: 'ORD-002', customer: 'Jane Smith', items: [{name: 'Classic Burger', price: 9.99, cost: 3.25}], total: 9.99, status: 'Completed', date: new Date('2023-10-27T15:30:00') },
-  { id: 'ORD-003', customer: 'Mike Johnson', items: [{name: 'Spaghetti Carbonara', price: 14.50, cost: 5.00}, {name: 'Classic Burger', price: 9.99, cost: 3.25}], total: 24.49, status: 'Preparing', date: new Date() },
-  { id: 'ORD-004', customer: 'Emily Davis', items: [{name: 'Margherita Pizza', price: 12.99, cost: 4.50}], total: 12.99, status: 'New', date: new Date() },
-];
+        const initialInventory = [
+            { id: 1, name: 'Pizza Dough', quantity: 50, unit: 'units', lowStock: 20 },
+            { id: 2, name: 'Burger Buns', quantity: 100, unit: 'units', lowStock: 40 },
+            { id: 3, name: 'Lettuce', quantity: 20, unit: 'kg', lowStock: 10 },
+            { id: 4, name: 'Tomatoes', quantity: 30, unit: 'kg', lowStock: 15 },
+            { id: 5, name: 'Cheese', quantity: 25, unit: 'kg', lowStock: 10 },
+        ];
 
-const initialEmployees = [
-    { id: 1, name: 'Alice', role: 'Chef' },
-    { id: 2, name: 'Bob', role: 'Waiter' },
-    { id: 3, name: 'Charlie', role: 'Waiter' },
-    { id: 4, name: 'Diana', role: 'Manager' },
-];
+        const initialOrders = [
+            { id: 'ORD-001', customer: 'John Doe', items: [{name: 'Margherita Pizza', price: 12.99, cost: 4.50}, {name: 'Caesar Salad', price: 7.99, cost: 2.50}], total: 20.98, status: 'Completed', date: new Date('2023-10-27T14:00:00') },
+            { id: 'ORD-002', customer: 'Jane Smith', items: [{name: 'Classic Burger', price: 9.99, cost: 3.25}], total: 9.99, status: 'Completed', date: new Date('2023-10-27T15:30:00') },
+            { id: 'ORD-003', customer: 'Mike Johnson', items: [{name: 'Spaghetti Carbonara', price: 14.50, cost: 5.00}, {name: 'Classic Burger', price: 9.99, cost: 3.25}], total: 24.49, status: 'Preparing', date: new Date() },
+            { id: 'ORD-004', customer: 'Emily Davis', items: [{name: 'Margherita Pizza', price: 12.99, cost: 4.50}], total: 12.99, status: 'New', date: new Date() },
+        ];
 
-const initialSchedule = {
-    'Monday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Bob', shift: '11:00 - 19:00' }],
-    'Tuesday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Charlie', shift: '11:00 - 19:00' }],
-    'Wednesday': [{ employee: 'Bob', shift: '09:00 - 17:00' }, { employee: 'Charlie', shift: '11:00 - 19:00' }],
-    'Thursday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Bob', shift: '11:00 - 19:00' }],
-    'Friday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Charlie', shift: '12:00 - 20:00' }],
-    'Saturday': [{ employee: 'Diana', shift: '10:00 - 22:00' }, { employee: 'Bob', shift: '12:00 - 20:00' }],
-    'Sunday': [{ employee: 'Diana', shift: '10:00 - 22:00' }, { employee: 'Charlie', shift: '12:00 - 20:00' }],
-};
+        const initialEmployees = [
+            { id: 1, name: 'Alice', role: 'Chef' },
+            { id: 2, name: 'Bob', role: 'Waiter' },
+            { id: 3, name: 'Charlie', role: 'Waiter' },
+            { id: 4, name: 'Diana', role: 'Manager' },
+        ];
 
-const initialTimecards = [
-    { id: 1, employeeId: 1, employeeName: 'Alice', clockIn: new Date('2023-10-26T09:01:00'), clockOut: new Date('2023-10-26T17:05:00') },
-    { id: 2, employeeId: 2, employeeName: 'Bob', clockIn: new Date('2023-10-26T11:00:00'), clockOut: new Date('2023-10-26T19:03:00') },
-    { id: 3, employeeId: 1, employeeName: 'Alice', clockIn: new Date('2023-10-27T08:58:00'), clockOut: null },
-];
+        const initialSchedule = {
+            'Monday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Bob', shift: '11:00 - 19:00' }],
+            'Tuesday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Charlie', shift: '11:00 - 19:00' }],
+            'Wednesday': [{ employee: 'Bob', shift: '09:00 - 17:00' }, { employee: 'Charlie', shift: '11:00 - 19:00' }],
+            'Thursday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Bob', shift: '11:00 - 19:00' }],
+            'Friday': [{ employee: 'Alice', shift: '09:00 - 17:00' }, { employee: 'Charlie', shift: '12:00 - 20:00' }],
+            'Saturday': [{ employee: 'Diana', shift: '10:00 - 22:00' }, { employee: 'Bob', shift: '12:00 - 20:00' }],
+            'Sunday': [{ employee: 'Diana', shift: '10:00 - 22:00' }, { employee: 'Charlie', shift: '12:00 - 20:00' }],
+        };
 
-const initialAnnouncements = [
-    { id: 1, author: 'Diana', message: 'Staff meeting tomorrow at 10 AM to discuss the new fall menu.', timestamp: new Date() },
-    { id: 2, author: 'System', message: 'Reminder: Deep cleaning of the kitchen is scheduled for this Sunday evening.', timestamp: new Date(Date.now() - 86400000) },
-];
+        const initialTimecards = [
+            { id: 1, employeeId: 1, employeeName: 'Alice', clockIn: new Date('2023-10-26T09:01:00'), clockOut: new Date('2023-10-26T17:05:00') },
+            { id: 2, employeeId: 2, employeeName: 'Bob', clockIn: new Date('2023-10-26T11:00:00'), clockOut: new Date('2023-10-26T19:03:00') },
+            { id: 3, employeeId: 1, employeeName: 'Alice', clockIn: new Date('2023-10-27T08:58:00'), clockOut: null },
+        ];
+
+        const initialAnnouncements = [
+            { id: 1, author: 'Diana', message: 'Staff meeting tomorrow at 10 AM to discuss the new fall menu.', timestamp: new Date() },
+            { id: 2, author: 'System', message: 'Reminder: Deep cleaning of the kitchen is scheduled for this Sunday evening.', timestamp: new Date(Date.now() - 86400000) },
+        ];
 
 
-// Context for managing active page
-const AppContext = createContext();
+        const { useState, createContext, useContext } = React;
+        const AppContext = createContext();
 
-// Main App Component
-export default function App() {
-  const [activePage, setActivePage] = useState('Dashboard');
+        function App() {
+            const [activePage, setActivePage] = useState('Dashboard');
+            const renderPage = () => {
+                switch (activePage) {
+                    case 'Dashboard': return <Dashboard />;
+                    case 'Orders': return <Orders />;
+                    case 'Menu': return <MenuPage />;
+                    case 'Inventory': return <Inventory />;
+                    case 'Schedule': return <SchedulePage />;
+                    case 'Timecards': return <TimecardPage />;
+                    case 'Financials': return <FinancialsPage />;
+                    case 'Announcements': return <AnnouncementsPage />;
+                    case 'Settings': return <SettingsPage />;
+                    default: return <Dashboard />;
+                }
+            };
+            return (
+                <AppContext.Provider value={{ activePage, setActivePage }}>
+                    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] bg-gray-100 dark:bg-gray-800 font-sans">
+                        <Sidebar />
+                        <div className="flex flex-col">
+                            <Header />
+                            <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+                                {renderPage()}
+                            </main>
+                        </div>
+                    </div>
+                </AppContext.Provider>
+            );
+        }
 
-  const renderPage = () => {
-    switch (activePage) {
-      case 'Dashboard':
-        return <Dashboard />;
-      case 'Orders':
-        return <Orders />;
-      case 'Menu':
-        return <MenuPage />;
-      case 'Inventory':
-        return <Inventory />;
-      case 'Schedule':
-        return <SchedulePage />;
-      case 'Timecards':
-        return <TimecardPage />;
-      case 'Financials':
-        return <FinancialsPage />;
-      case 'Announcements':
-        return <AnnouncementsPage />;
-      case 'Settings':
-        return <SettingsPage />;
-      default:
-        return <Dashboard />;
-    }
-  };
+        function Sidebar() {
+            const { activePage, setActivePage } = useContext(AppContext);
+            const navItems = [
+                { name: 'Dashboard', icon: '🏠' },
+                { name: 'Orders', icon: '🛒' },
+                { name: 'Menu', icon: '📝' },
+                { name: 'Inventory', icon: '📦' },
+                { name: 'Schedule', icon: '🗓️' },
+                { name: 'Timecards', icon: '⏰' },
+                { name: 'Financials', icon: '📊' },
+                { name: 'Announcements', icon: '🗣️' },
+                { name: 'Settings', icon: '⚙️' },
+            ];
 
-  return (
-    <AppContext.Provider value={{ activePage, setActivePage }}>
-      <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr] bg-gray-100 dark:bg-gray-800 font-sans">
-        <Sidebar />
-        <div className="flex flex-col">
-          <Header />
-          <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-            {renderPage()}
-          </main>
-        </div>
-      </div>
-    </AppContext.Provider>
-  );
-}
-
-// Sidebar Component
-function Sidebar() {
-  const { activePage, setActivePage } = useContext(AppContext);
-  const navItems = [
-    { name: 'Dashboard', icon: Home },
-    { name: 'Orders', icon: ShoppingCart },
-    { name: 'Menu', icon: ClipboardList },
-    { name: 'Inventory', icon: Package },
-    { name: 'Schedule', icon: Calendar },
-    { name: 'Timecards', icon: Clock },
-    { name: 'Financials', icon: BarChart2 },
-    { name: 'Announcements', icon: MessageSquare },
-    { name: 'Settings', icon: Settings },
-  ];
-
-  return (
-    <div className="hidden border-r bg-white dark:bg-gray-900 md:block">
-      <div className="flex h-full max-h-screen flex-col gap-2">
-        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <a href="#" className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
-            <ChefHat className="h-6 w-6" />
-            <span>RestoFlow</span>
-          </a>
-        </div>
-        <div className="flex-1">
-          <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-            {navItems.map(item => (
-              <button
-                key={item.name}
-                onClick={() => setActivePage(item.name)}
-                className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-                  activePage === item.name
-                    ? 'bg-gray-100 text-primary dark:bg-gray-800 dark:text-white'
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Header Component
-function Header() {
-  const { activePage, setActivePage } = useContext(AppContext);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  const navItems = [
-    { name: 'Dashboard', icon: Home },
-    { name: 'Orders', icon: ShoppingCart },
-    { name: 'Menu', icon: ClipboardList },
-    { name: 'Inventory', icon: Package },
-    { name: 'Schedule', icon: Calendar },
-    { name: 'Timecards', icon: Clock },
-    { name: 'Financials', icon: BarChart2 },
-    { name: 'Announcements', icon: MessageSquare },
-    { name: 'Settings', icon: Settings },
-  ];
-
-  return (
-    <header className="flex h-14 items-center gap-4 border-b bg-white px-4 lg:h-[60px] lg:px-6 dark:bg-gray-900">
-      <button
-        className="md:hidden"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      >
-        <Menu className="h-6 w-6 text-gray-900 dark:text-white" />
-      </button>
-      {isMobileMenuOpen && (
-        <div className="absolute top-14 left-0 w-full bg-white dark:bg-gray-900 md:hidden z-20">
-          <nav className="grid gap-2 p-4">
-            {navItems.map(item => (
-              <button
-                key={item.name}
-                onClick={() => {
-                  setActivePage(item.name);
-                  setIsMobileMenuOpen(false);
-                }}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 dark:text-white transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <item.icon className="h-4 w-4" />
-                {item.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-      )}
-      <div className="w-full flex-1">
-        {/* Search can be added here if needed */}
-      </div>
-      <button className="relative">
-        <Bell className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-        <span className="absolute -top-1 -right-1 flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-        </span>
-      </button>
-      <button>
-        <CircleUser className="h-6 w-6 text-gray-600 dark:text-gray-300" />
-      </button>
-    </header>
-  );
-}
-
-// Dashboard Component
-function Dashboard() {
-    const totalSales = initialOrders.filter(o => o.status === 'Completed').reduce((sum, order) => sum + order.total, 0);
-    const newOrders = initialOrders.filter(o => o.status === 'New').length;
-    const preparingOrders = initialOrders.filter(o => o.status === 'Preparing').length;
-    const popularItem = 'Margherita Pizza'; // Mocked
-
-  return (
-    <div className="animate-fade-in">
-        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-          <Card
-            title="Total Revenue"
-            icon={<DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-            value={`$${totalSales.toFixed(2)}`}
-            description="Total sales from completed orders"
-          />
-          <Card
-            title="New Orders"
-            icon={<ShoppingCart className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-            value={newOrders}
-            description="Orders waiting for confirmation"
-          />
-          <Card
-            title="In Progress"
-            icon={<ChefHat className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-            value={preparingOrders}
-            description="Orders currently being prepared"
-          />
-          <Card
-            title="Most Popular Item"
-            icon={<LineChart className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-            value={popularItem}
-            description="Top-selling item this month"
-          />
-        </div>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
-            <Announcements />
-            <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Orders</h2>
-                <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" className="px-6 py-3">Order ID</th>
-                                    <th scope="col" className="px-6 py-3">Customer</th>
-                                    <th scope="col" className="px-6 py-3">Total</th>
-                                    <th scope="col" className="px-6 py-3">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {initialOrders.slice(0, 5).map(order => (
-                                    <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
-                                        <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{order.id}</th>
-                                        <td className="px-6 py-4">{order.customer}</td>
-                                        <td className="px-6 py-4">${order.total.toFixed(2)}</td>
-                                        <td className="px-6 py-4">
-                                            <StatusBadge status={order.status} />
-                                        </td>
-                                    </tr>
+            return (
+                <div className="hidden border-r bg-white dark:bg-gray-900 md:block">
+                    <div className="flex h-full max-h-screen flex-col gap-2">
+                        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+                            <a href="#" className="flex items-center gap-2 font-semibold text-gray-900 dark:text-white">
+                                <span className="h-6 w-6">👨‍🍳</span>
+                                <span>RestoFlow</span>
+                            </a>
+                        </div>
+                        <div className="flex-1">
+                            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+                                {navItems.map(item => (
+                                    <button
+                                        key={item.name}
+                                        onClick={() => setActivePage(item.name)}
+                                        className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
+                                          activePage === item.name
+                                            ? 'bg-gray-100 text-primary dark:bg-gray-800 dark:text-white'
+                                            : 'text-gray-500 dark:text-gray-400'
+                                        }`}
+                                    >
+                                        <span className="h-4 w-4">{item.icon}</span>
+                                        {item.name}
+                                    </button>
                                 ))}
-                            </tbody>
-                        </table>
+                            </nav>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-  );
-}
+            );
+        }
 
-// Orders Page Component
-function Orders() {
-  const [orders, setOrders] = useState(initialOrders);
-  
-  const handleStatusChange = (orderId, newStatus) => {
-    setOrders(orders.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-  };
+        function Header() {
+            const { setActivePage } = useContext(AppContext);
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+            const navItems = [
+                { name: 'Dashboard', icon: '🏠' },
+                { name: 'Orders', icon: '🛒' },
+                { name: 'Menu', icon: '📝' },
+                { name: 'Inventory', icon: '📦' },
+                { name: 'Schedule', icon: '🗓️' },
+                { name: 'Timecards', icon: '⏰' },
+                { name: 'Financials', icon: '📊' },
+                { name: 'Announcements', icon: '🗣️' },
+                { name: 'Settings', icon: '⚙️' },
+            ];
 
-  return (
-    <div className="animate-fade-in">
-        <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Orders</h1>
-            <ExportButton />
-        </div>
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">Order ID</th>
-                            <th scope="col" className="px-6 py-3">Customer</th>
-                            <th scope="col" className="px-6 py-3">Items</th>
-                            <th scope="col" className="px-6 py-3">Total</th>
-                            <th scope="col" className="px-6 py-3">Status</th>
-                            <th scope="col" className="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {orders.map(order => (
-                            <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
-                                <td className="px-6 py-4">{order.customer}</td>
-                                <td className="px-6 py-4">{order.items.map(i => i.name).join(', ')}</td>
-                                <td className="px-6 py-4">${order.total.toFixed(2)}</td>
-                                <td className="px-6 py-4"><StatusBadge status={order.status} /></td>
-                                <td className="px-6 py-4">
-                                    <select 
-                                        value={order.status}
-                                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            return (
+                <header className="flex h-14 items-center gap-4 border-b bg-white px-4 lg:h-[60px] lg:px-6 dark:bg-gray-900">
+                    <button className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+                        <span className="h-6 w-6 text-gray-900 dark:text-white">☰</span>
+                    </button>
+                    {isMobileMenuOpen && (
+                        <div className="absolute top-14 left-0 w-full bg-white dark:bg-gray-900 md:hidden z-20">
+                            <nav className="grid gap-2 p-4">
+                                {navItems.map(item => (
+                                    <button
+                                        key={item.name}
+                                        onClick={() => { setActivePage(item.name); setIsMobileMenuOpen(false); }}
+                                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-gray-900 dark:text-white transition-all hover:bg-gray-100 dark:hover:bg-gray-800"
                                     >
-                                        <option>New</option>
-                                        <option>Preparing</option>
-                                        <option>Ready</option>
-                                        <option>Completed</option>
-                                        <option>Cancelled</option>
-                                    </select>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-  );
-}
-
-// Menu Management Page Component
-function MenuPage() {
-    const [menuItems, setMenuItems] = useState(initialMenu);
-    const [newItem, setNewItem] = useState({ name: '', category: '', price: '', cost: '', stock: '', image: '' });
-
-    const deleteItem = (id) => {
-        setMenuItems(menuItems.filter(item => item.id !== id));
-    };
-
-    const handleAddItem = (e) => {
-        e.preventDefault();
-        const newId = menuItems.length > 0 ? Math.max(...menuItems.map(item => item.id)) + 1 : 1;
-        setMenuItems([...menuItems, { ...newItem, id: newId, price: parseFloat(newItem.price), cost: parseFloat(newItem.cost), stock: parseInt(newItem.stock) }]);
-        setNewItem({ name: '', category: '', price: '', cost: '', stock: '', image: '' });
-    };
-
-    return (
-        <div className="animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Menu</h1>
-                 <div className="flex items-center gap-2">
-                    <ExportButton data={menuItems} filename="menu_items" />
-                    {/* Placeholder for Add Item button - could be a modal */}
-                </div>
-            </div>
-             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm mb-6 p-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Add New Menu Item</h3>
-                <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Item Name" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="text" value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} placeholder="Category" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="number" value={newItem.price} onChange={(e) => setNewItem({...newItem, price: e.target.value})} placeholder="Price" step="0.01" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="number" value={newItem.cost} onChange={(e) => setNewItem({...newItem, cost: e.target.value})} placeholder="Cost" step="0.01" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="number" value={newItem.stock} onChange={(e) => setNewItem({...newItem, stock: e.target.value})} placeholder="Stock" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="text" value={newItem.image} onChange={(e) => setNewItem({...newItem, image: e.target.value})} placeholder="Image URL (optional)" className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
-                         Add New Item
-                    </button>
-                </form>
-             </div>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
-                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr>
-                                <th scope="col" className="px-6 py-3">Item</th>
-                                <th scope="col" className="px-6 py-3">Category</th>
-                                <th scope="col" className="px-6 py-3">Price</th>
-                                <th scope="col" className="px-6 py-3">Cost</th>
-                                <th scope="col" className="px-6 py-3">Stock</th>
-                                <th scope="col" className="px-6 py-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {menuItems.map(item => (
-                                <tr key={item.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <img src={item.image || 'https://placehold.co/100x100/eeeeee/333333?text=N/A'} alt={item.name} className="w-10 h-10 rounded-md object-cover" />
-                                            <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">{item.category}</td>
-                                    <td className="px-6 py-4">${item.price.toFixed(2)}</td>
-                                    <td className="px-6 py-4">${item.cost.toFixed(2)}</td>
-                                    <td className="px-6 py-4">{item.stock}</td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex gap-2">
-                                            <button className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"><Edit className="w-4 h-4" /></button>
-                                            <button onClick={() => deleteItem(item.id)} className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Inventory Management Page Component
-function Inventory() {
-    const [inventoryItems, setInventoryItems] = useState(initialInventory);
-    const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '', lowStock: '' });
-
-    const deleteItem = (id) => {
-        setInventoryItems(inventoryItems.filter(item => item.id !== id));
-    };
-
-    const handleAddItem = (e) => {
-        e.preventDefault();
-        const newId = inventoryItems.length > 0 ? Math.max(...inventoryItems.map(item => item.id)) + 1 : 1;
-        setInventoryItems([...inventoryItems, { ...newItem, id: newId, quantity: parseInt(newItem.quantity), lowStock: parseInt(newItem.lowStock) }]);
-        setNewItem({ name: '', quantity: '', unit: '', lowStock: '' });
-    };
-    
-    return (
-        <div className="animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Inventory</h1>
-                <div className="flex items-center gap-2">
-                    <ExportButton data={inventoryItems} filename="inventory_report" />
-                </div>
-            </div>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm mb-6 p-4">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Add New Ingredient</h3>
-                 <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ingredient Name" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="number" value={newItem.quantity} onChange={(e) => setNewItem({...newItem, quantity: e.target.value})} placeholder="Quantity" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="text" value={newItem.unit} onChange={(e) => setNewItem({...newItem, unit: e.target.value})} placeholder="Unit (e.g., kg, units)" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <input type="number" value={newItem.lowStock} onChange={(e) => setNewItem({...newItem, lowStock: e.target.value})} placeholder="Low Stock Threshold" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
-                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
-                        Add Ingredient
-                    </button>
-                </form>
-            </div>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr>
-                                <th scope="col" className="px-6 py-3">Ingredient</th>
-                                <th scope="col" className="px-6 py-3">Quantity</th>
-                                <th scope="col" className="px-6 py-3">Status</th>
-                                <th scope="col" className="px-6 py-3">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {inventoryItems.map(item => (
-                                <tr key={item.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{item.name}</td>
-                                    <td className="px-6 py-4">{item.quantity} {item.unit}</td>
-                                    <td className="px-6 py-4">
-                                        {item.quantity <= item.lowStock ? (
-                                            <span className="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Low Stock</span>
-                                        ) : (
-                                            <span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">In Stock</span>
-                                        )}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex gap-2">
-                                            <button className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400"><Edit className="w-4 h-4" /></button>
-                                            <button onClick={() => deleteItem(item.id)} className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400"><Trash2 className="w-4 h-4" /></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// Schedule Page Component
-function SchedulePage() {
-    const days = Object.keys(initialSchedule);
-
-    return (
-        <div className="animate-fade-in">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Weekly Schedule</h1>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
-                    {days.map(day => (
-                        <div key={day} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
-                            <h3 className="font-semibold text-center text-gray-900 dark:text-white mb-2">{day}</h3>
-                            <div className="space-y-2">
-                                {initialSchedule[day].map((shift, index) => (
-                                    <div key={index} className="text-sm bg-white dark:bg-gray-700 rounded-md p-2 shadow-sm">
-                                        <p className="font-medium text-gray-800 dark:text-gray-200">{shift.employee}</p>
-                                        <p className="text-gray-600 dark:text-gray-400">{shift.shift}</p>
-                                    </div>
+                                        <span className="h-4 w-4">{item.icon}</span>
+                                        {item.name}
+                                    </button>
                                 ))}
+                            </nav>
+                        </div>
+                    )}
+                    <div className="w-full flex-1"></div>
+                    <button className="relative">
+                        <span className="h-5 w-5 text-gray-600 dark:text-gray-300">🔔</span>
+                        <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                    </button>
+                    <button>
+                        <span className="h-6 w-6 text-gray-600 dark:text-gray-300">👤</span>
+                    </button>
+                </header>
+            );
+        }
+
+        function Dashboard() {
+            const totalSales = initialOrders.filter(o => o.status === 'Completed').reduce((sum, order) => sum + order.total, 0);
+            const newOrders = initialOrders.filter(o => o.status === 'New').length;
+            const preparingOrders = initialOrders.filter(o => o.status === 'Preparing').length;
+            const popularItem = 'Margherita Pizza';
+            return (
+                <div className="animate-fade-in">
+                    <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+                        <Card title="Total Revenue" icon="💲" value={`$${totalSales.toFixed(2)}`} description="Total sales from completed orders" />
+                        <Card title="New Orders" icon="🛒" value={newOrders} description="Orders waiting for confirmation" />
+                        <Card title="In Progress" icon="👨‍🍳" value={preparingOrders} description="Orders currently being prepared" />
+                        <Card title="Most Popular Item" icon="📈" value={popularItem} description="Top-selling item this month" />
+                    </div>
+                    <div className="mt-6 grid gap-6 md:grid-cols-2">
+                        <Announcements />
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Orders</h2>
+                            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                            <tr>
+                                                <th scope="col" className="px-6 py-3">Order ID</th>
+                                                <th scope="col" className="px-6 py-3">Customer</th>
+                                                <th scope="col" className="px-6 py-3">Total</th>
+                                                <th scope="col" className="px-6 py-3">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {initialOrders.slice(0, 5).map(order => (
+                                                <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700">
+                                                    <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{order.id}</th>
+                                                    <td className="px-6 py-4">{order.customer}</td>
+                                                    <td className="px-6 py-4">${order.total.toFixed(2)}</td>
+                                                    <td className="px-6 py-4"><StatusBadge status={order.status} /></td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    ))}
+                    </div>
                 </div>
-            </div>
-        </div>
-    );
-}
+            );
+        }
 
-// Timecard Management Page Component
-function TimecardPage() {
-    const [timecards, setTimecards] = useState(initialTimecards);
-    const [selectedEmployee, setSelectedEmployee] = useState(initialEmployees[0].id);
-
-    const handleClockAction = () => {
-        const now = new Date();
-        const employee = initialEmployees.find(e => e.id === parseInt(selectedEmployee));
-        const activeTimecardIndex = timecards.findIndex(t => t.employeeId === employee.id && t.clockOut === null);
-
-        if (activeTimecardIndex !== -1) {
-            // Clock out
-            const updatedTimecards = [...timecards];
-            updatedTimecards[activeTimecardIndex].clockOut = now;
-            setTimecards(updatedTimecards);
-        } else {
-            // Clock in
-            const newTimecard = {
-                id: timecards.length + 1,
-                employeeId: employee.id,
-                employeeName: employee.name,
-                clockIn: now,
-                clockOut: null,
+        function Orders() {
+            const [orders, setOrders] = useState(initialOrders);
+            const handleStatusChange = (orderId, newStatus) => {
+                setOrders(orders.map(order => order.id === orderId ? { ...order, status: newStatus } : order));
             };
-            setTimecards([...timecards, newTimecard]);
+            return (
+                <div className="animate-fade-in">
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Orders</h1>
+                        <ExportButton data={orders} filename="orders_report" />
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3">Order ID</th>
+                                        <th scope="col" className="px-6 py-3">Customer</th>
+                                        <th scope="col" className="px-6 py-3">Items</th>
+                                        <th scope="col" className="px-6 py-3">Total</th>
+                                        <th scope="col" className="px-6 py-3">Status</th>
+                                        <th scope="col" className="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {orders.map(order => (
+                                        <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
+                                            <td className="px-6 py-4">{order.customer}</td>
+                                            <td className="px-6 py-4">{order.items.map(i => i.name).join(', ')}</td>
+                                            <td className="px-6 py-4">${order.total.toFixed(2)}</td>
+                                            <td className="px-6 py-4"><StatusBadge status={order.status} /></td>
+                                            <td className="px-6 py-4">
+                                                <select
+                                                    value={order.status}
+                                                    onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-1.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                                                >
+                                                    <option>New</option>
+                                                    <option>Preparing</option>
+                                                    <option>Ready</option>
+                                                    <option>Completed</option>
+                                                    <option>Cancelled</option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
         }
-    };
 
-    const calculateDuration = (clockIn, clockOut) => {
-        if (!clockOut) return 'Active';
-        const durationMs = clockOut.getTime() - clockIn.getTime();
-        const hours = (durationMs / (1000 * 60 * 60)).toFixed(2);
-        return `${hours} hours`;
-    };
+        function MenuPage() {
+            const [menuItems, setMenuItems] = useState(initialMenu);
+            const [newItem, setNewItem] = useState({ name: '', category: '', price: '', cost: '', stock: '', image: '' });
+            const deleteItem = (id) => {
+                setMenuItems(menuItems.filter(item => item.id !== id));
+            };
+            const handleAddItem = (e) => {
+                e.preventDefault();
+                const newId = menuItems.length > 0 ? Math.max(...menuItems.map(item => item.id)) + 1 : 1;
+                setMenuItems([...menuItems, { ...newItem, id: newId, price: parseFloat(newItem.price), cost: parseFloat(newItem.cost), stock: parseInt(newItem.stock) }]);
+                setNewItem({ name: '', category: '', price: '', cost: '', stock: '', image: '' });
+            };
+            return (
+                <div className="animate-fade-in">
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Menu</h1>
+                        <div className="flex items-center gap-2">
+                            <ExportButton data={menuItems} filename="menu_items" />
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm mb-6 p-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Add New Menu Item</h3>
+                        <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Item Name" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="text" value={newItem.category} onChange={(e) => setNewItem({...newItem, category: e.target.value})} placeholder="Category" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="number" value={newItem.price} onChange={(e) => setNewItem({...newItem, price: e.target.value})} placeholder="Price" step="0.01" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="number" value={newItem.cost} onChange={(e) => setNewItem({...newItem, cost: e.target.value})} placeholder="Cost" step="0.01" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="number" value={newItem.stock} onChange={(e) => setNewItem({...newItem, stock: e.target.value})} placeholder="Stock" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="text" value={newItem.image} onChange={(e) => setNewItem({...newItem, image: e.target.value})} placeholder="Image URL (optional)" className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Add New Item</button>
+                        </form>
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3">Item</th>
+                                        <th scope="col" className="px-6 py-3">Category</th>
+                                        <th scope="col" className="px-6 py-3">Price</th>
+                                        <th scope="col" className="px-6 py-3">Cost</th>
+                                        <th scope="col" className="px-6 py-3">Stock</th>
+                                        <th scope="col" className="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {menuItems.map(item => (
+                                        <tr key={item.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <img src={item.image || 'https://placehold.co/100x100/eeeeee/333333?text=N/A'} alt={item.name} className="w-10 h-10 rounded-md object-cover" />
+                                                    <span className="font-medium text-gray-900 dark:text-white">{item.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">{item.category}</td>
+                                            <td className="px-6 py-4">${item.price.toFixed(2)}</td>
+                                            <td className="px-6 py-4">${item.cost.toFixed(2)}</td>
+                                            <td className="px-6 py-4">{item.stock}</td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex gap-2">
+                                                    <button className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400">✏️</button>
+                                                    <button onClick={() => deleteItem(item.id)} className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400">🗑️</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
-    return (
-        <div className="animate-fade-in">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Timecards</h1>
-            <div className="grid gap-6 md:grid-cols-3">
-                <div className="md:col-span-1 bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 h-fit">
-                    <h3 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Time Clock</h3>
+        function Inventory() {
+            const [inventoryItems, setInventoryItems] = useState(initialInventory);
+            const [newItem, setNewItem] = useState({ name: '', quantity: '', unit: '', lowStock: '' });
+            const deleteItem = (id) => {
+                setInventoryItems(inventoryItems.filter(item => item.id !== id));
+            };
+            const handleAddItem = (e) => {
+                e.preventDefault();
+                const newId = inventoryItems.length > 0 ? Math.max(...inventoryItems.map(item => item.id)) + 1 : 1;
+                setInventoryItems([...inventoryItems, { ...newItem, id: newId, quantity: parseInt(newItem.quantity), lowStock: parseInt(newItem.lowStock) }]);
+                setNewItem({ name: '', quantity: '', unit: '', lowStock: '' });
+            };
+            return (
+                <div className="animate-fade-in">
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Inventory</h1>
+                        <div className="flex items-center gap-2">
+                            <ExportButton data={inventoryItems} filename="inventory_report" />
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm mb-6 p-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Add New Ingredient</h3>
+                        <form onSubmit={handleAddItem} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <input type="text" value={newItem.name} onChange={(e) => setNewItem({...newItem, name: e.target.value})} placeholder="Ingredient Name" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="number" value={newItem.quantity} onChange={(e) => setNewItem({...newItem, quantity: e.target.value})} placeholder="Quantity" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="text" value={newItem.unit} onChange={(e) => setNewItem({...newItem, unit: e.target.value})} placeholder="Unit (e.g., kg, units)" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <input type="number" value={newItem.lowStock} onChange={(e) => setNewItem({...newItem, lowStock: e.target.value})} placeholder="Low Stock Threshold" required className="rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"/>
+                            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Add Ingredient</button>
+                        </form>
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3">Ingredient</th>
+                                        <th scope="col" className="px-6 py-3">Quantity</th>
+                                        <th scope="col" className="px-6 py-3">Status</th>
+                                        <th scope="col" className="px-6 py-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {inventoryItems.map(item => (
+                                        <tr key={item.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                            <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{item.name}</td>
+                                            <td className="px-6 py-4">{item.quantity} {item.unit}</td>
+                                            <td className="px-6 py-4">
+                                                {item.quantity <= item.lowStock ? (
+                                                    <span className="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-red-900 dark:text-red-300">Low Stock</span>
+                                                ) : (
+                                                    <span className="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">In Stock</span>
+                                                )}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex gap-2">
+                                                    <button className="p-2 text-gray-500 hover:text-blue-600 dark:hover:text-blue-400">✏️</button>
+                                                    <button onClick={() => deleteItem(item.id)} className="p-2 text-gray-500 hover:text-red-600 dark:hover:text-red-400">🗑️</button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function SchedulePage() {
+            const days = Object.keys(initialSchedule);
+            return (
+                <div className="animate-fade-in">
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Weekly Schedule</h1>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
+                            {days.map(day => (
+                                <div key={day} className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3">
+                                    <h3 className="font-semibold text-center text-gray-900 dark:text-white mb-2">{day}</h3>
+                                    <div className="space-y-2">
+                                        {initialSchedule[day].map((shift, index) => (
+                                            <div key={index} className="text-sm bg-white dark:bg-gray-700 rounded-md p-2 shadow-sm">
+                                                <p className="font-medium text-gray-800 dark:text-gray-200">{shift.employee}</p>
+                                                <p className="text-gray-600 dark:text-gray-400">{shift.shift}</p>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function TimecardPage() {
+            const [timecards, setTimecards] = useState(initialTimecards);
+            const [selectedEmployee, setSelectedEmployee] = useState(initialEmployees[0].id);
+            const handleClockAction = () => {
+                const now = new Date();
+                const employee = initialEmployees.find(e => e.id === parseInt(selectedEmployee));
+                const activeTimecardIndex = timecards.findIndex(t => t.employeeId === employee.id && t.clockOut === null);
+                if (activeTimecardIndex !== -1) {
+                    const updatedTimecards = [...timecards];
+                    updatedTimecards[activeTimecardIndex].clockOut = now;
+                    setTimecards(updatedTimecards);
+                } else {
+                    const newTimecard = {
+                        id: timecards.length + 1,
+                        employeeId: employee.id,
+                        employeeName: employee.name,
+                        clockIn: now,
+                        clockOut: null,
+                    };
+                    setTimecards([...timecards, newTimecard]);
+                }
+            };
+            const calculateDuration = (clockIn, clockOut) => {
+                if (!clockOut) return 'Active';
+                const durationMs = clockOut.getTime() - clockIn.getTime();
+                const hours = (durationMs / (1000 * 60 * 60)).toFixed(2);
+                return `${hours} hours`;
+            };
+            return (
+                <div className="animate-fade-in">
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Timecards</h1>
+                    <div className="grid gap-6 md:grid-cols-3">
+                        <div className="md:col-span-1 bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 h-fit">
+                            <h3 className="text-lg font-medium mb-3 text-gray-900 dark:text-white">Time Clock</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label htmlFor="employee-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Employee</label>
+                                    <select
+                                        id="employee-select"
+                                        value={selectedEmployee}
+                                        onChange={(e) => setSelectedEmployee(e.target.value)}
+                                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
+                                    >
+                                        {initialEmployees.map(emp => (
+                                            <option key={emp.id} value={emp.id}>{emp.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <button
+                                    onClick={handleClockAction}
+                                    className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors"
+                                >
+                                    Clock In / Out
+                                </button>
+                            </div>
+                        </div>
+                        <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-lg shadow-sm">
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                        <tr>
+                                            <th scope="col" className="px-6 py-3">Employee</th>
+                                            <th scope="col" className="px-6 py-3">Clock In</th>
+                                            <th scope="col" className="px-6 py-3">Clock Out</th>
+                                            <th scope="col" className="px-6 py-3">Duration</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {timecards.slice().reverse().map(tc => (
+                                            <tr key={tc.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{tc.employeeName}</td>
+                                                <td className="px-6 py-4">{tc.clockIn.toLocaleString()}</td>
+                                                <td className="px-6 py-4">{tc.clockOut ? tc.clockOut.toLocaleString() : '—'}</td>
+                                                <td className="px-6 py-4">{calculateDuration(tc.clockIn, tc.clockOut)}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function FinancialsPage() {
+            const completedOrders = initialOrders.filter(o => o.status === 'Completed');
+            const grossSales = completedOrders.reduce((sum, order) => sum + order.total, 0);
+            const cogs = completedOrders.reduce((sum, order) => {
+                const orderCost = order.items.reduce((itemSum, item) => itemSum + item.cost, 0);
+                return sum + orderCost;
+            }, 0);
+            const netProfit = grossSales - cogs;
+            const salesByCategory = completedOrders.reduce((acc, order) => {
+                order.items.forEach(item => {
+                    const menuItem = initialMenu.find(m => m.name === item.name);
+                    if (menuItem) {
+                        const category = menuItem.category;
+                        acc[category] = (acc[category] || 0) + item.price;
+                    }
+                });
+                return acc;
+            }, {});
+            const chartData = Object.keys(salesByCategory).map(category => ({
+                name: category,
+                sales: salesByCategory[category]
+            }));
+
+            // Simplified CSS bar chart to replace recharts
+            const maxSales = Math.max(...chartData.map(d => d.sales));
+            const chartHeight = 200;
+
+            return (
+                <div className="animate-fade-in">
+                    <div className="flex justify-between items-center mb-4">
+                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Financials</h1>
+                        <ExportButton data={completedOrders} filename="financials_report" />
+                    </div>
+                    <div className="grid gap-4 md:grid-cols-3 mb-6">
+                        <Card title="Gross Sales" icon="💲" value={`$${grossSales.toFixed(2)}`} description="Total revenue from all sales" />
+                        <Card title="Cost of Goods Sold (COGS)" icon="💲" value={`$${cogs.toFixed(2)}`} description="Total cost of ingredients sold" />
+                        <Card title="Net Profit" icon="💰" value={`$${netProfit.toFixed(2)}`} description="Gross Sales - COGS" />
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-6">
+                        <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Sales Breakdown by Category</h3>
+                        <div className="h-[250px] flex items-end justify-around gap-2 px-4">
+                            {chartData.map((d, index) => (
+                                <div key={index} className="flex flex-col items-center h-full justify-end" style={{ flex: 1, minWidth: '50px' }}>
+                                    <div
+                                        className="bg-blue-500 w-full rounded-t-lg transition-all duration-300 ease-in-out"
+                                        style={{ height: `${(d.sales / maxSales) * chartHeight}px` }}
+                                    ></div>
+                                    <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center font-medium">{d.name}</div>
+                                    <div className="text-xs text-gray-400 dark:text-gray-500">${d.sales.toFixed(0)}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
+                        <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Detailed Sales Report</h3>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th scope="col" className="px-6 py-3">Order ID</th>
+                                        <th scope="col" className="px-6 py-3">Date</th>
+                                        <th scope="col" className="px-6 py-3">Total</th>
+                                        <th scope="col" className="px-6 py-3">Cost</th>
+                                        <th scope="col" className="px-6 py-3">Profit</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {completedOrders.map(order => {
+                                        const orderCost = order.items.reduce((itemSum, item) => itemSum + item.cost, 0);
+                                        const orderProfit = order.total - orderCost;
+                                        return (
+                                            <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                                                <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
+                                                <td className="px-6 py-4">{order.date.toLocaleString()}</td>
+                                                <td className="px-6 py-4">${order.total.toFixed(2)}</td>
+                                                <td className="px-6 py-4">${orderCost.toFixed(2)}</td>
+                                                <td className="px-6 py-4">${orderProfit.toFixed(2)}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        function AnnouncementsPage() {
+            const [announcements, setAnnouncements] = useState(initialAnnouncements);
+            const [newAnnouncement, setNewAnnouncement] = useState('');
+            const handlePostAnnouncement = (e) => {
+                e.preventDefault();
+                if (newAnnouncement.trim()) {
+                    const newId = announcements.length > 0 ? Math.max(...announcements.map(a => a.id)) + 1 : 1;
+                    setAnnouncements([
+                        { id: newId, author: 'Manager', message: newAnnouncement, timestamp: new Date() },
+                        ...announcements,
+                    ]);
+                    setNewAnnouncement('');
+                }
+            };
+            return (
+                <div className="animate-fade-in">
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Announcements</h1>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-6">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Post a New Announcement</h3>
+                        <form onSubmit={handlePostAnnouncement} className="flex flex-col sm:flex-row gap-2">
+                            <input
+                                type="text"
+                                value={newAnnouncement}
+                                onChange={(e) => setNewAnnouncement(e.target.value)}
+                                placeholder="Type your announcement here..."
+                                className="flex-1 rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                                required
+                            />
+                            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">Post</button>
+                        </form>
+                    </div>
                     <div className="space-y-4">
-                        <div>
-                            <label htmlFor="employee-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Select Employee</label>
-                            <select 
-                                id="employee-select"
-                                value={selectedEmployee}
-                                onChange={(e) => setSelectedEmployee(e.target.value)}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white sm:text-sm"
-                            >
-                                {initialEmployees.map(emp => (
-                                    <option key={emp.id} value={emp.id}>{emp.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <button 
-                            onClick={handleClockAction}
-                            className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors"
-                        >
-                            Clock In / Out
-                        </button>
+                        {announcements.map(announcement => (
+                            <div key={announcement.id} className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="font-semibold text-gray-900 dark:text-white">{announcement.author}</span>
+                                    <span className="text-xs text-gray-500 dark:text-gray-400">{announcement.timestamp.toLocaleString()}</span>
+                                </div>
+                                <p className="text-gray-700 dark:text-gray-300">{announcement.message}</p>
+                            </div>
+                        ))}
                     </div>
                 </div>
-                <div className="md:col-span-2 bg-white dark:bg-gray-900 rounded-lg shadow-sm">
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                                <tr>
-                                    <th scope="col" className="px-6 py-3">Employee</th>
-                                    <th scope="col" className="px-6 py-3">Clock In</th>
-                                    <th scope="col" className="px-6 py-3">Clock Out</th>
-                                    <th scope="col" className="px-6 py-3">Duration</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {timecards.slice().reverse().map(tc => (
-                                    <tr key={tc.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{tc.employeeName}</td>
-                                        <td className="px-6 py-4">{tc.clockIn.toLocaleString()}</td>
-                                        <td className="px-6 py-4">{tc.clockOut ? tc.clockOut.toLocaleString() : '—'}</td>
-                                        <td className="px-6 py-4">{calculateDuration(tc.clockIn, tc.clockOut)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
+            );
+        }
 
-// Financials Page Component - Completed
-function FinancialsPage() {
-    const completedOrders = initialOrders.filter(o => o.status === 'Completed');
-    const grossSales = completedOrders.reduce((sum, order) => sum + order.total, 0);
-    const cogs = completedOrders.reduce((sum, order) => {
-        const orderCost = order.items.reduce((itemSum, item) => itemSum + item.cost, 0);
-        return sum + orderCost;
-    }, 0);
-    const netProfit = grossSales - cogs;
-    
-    // Aggregate sales data by item category for the chart
-    const salesByCategory = completedOrders.reduce((acc, order) => {
-        order.items.forEach(item => {
-            const menuItem = initialMenu.find(m => m.name === item.name);
-            if (menuItem) {
-                const category = menuItem.category;
-                acc[category] = (acc[category] || 0) + item.price;
+        function SettingsPage() {
+            return (
+                <div className="animate-fade-in">
+                    <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Settings</h1>
+                    <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
+                        <p className="text-gray-700 dark:text-gray-300">Settings and configuration options would go here. For example, managing user roles, notification preferences, or business details.</p>
+                    </div>
+                </div>
+            );
+        }
+
+        function Card({ title, value, description, icon }) {
+            return (
+                <div className="rounded-lg border bg-white text-card-foreground shadow-sm dark:bg-gray-900 p-6">
+                    <div className="flex justify-between items-center pb-2">
+                        <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
+                        <span className="h-4 w-4 text-gray-500 dark:text-gray-400">{icon}</span>
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>
+                </div>
+            );
+        }
+
+        function StatusBadge({ status }) {
+            let colorClass = '';
+            switch (status) {
+                case 'New': colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'; break;
+                case 'Preparing': colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'; break;
+                case 'Ready': colorClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'; break;
+                case 'Completed': colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'; break;
+                case 'Cancelled': colorClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'; break;
+                default: colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
             }
-        });
-        return acc;
-    }, {});
+            return (<span className={`text-xs font-medium me-2 px-2.5 py-0.5 rounded-full ${colorClass}`}>{status}</span>);
+        }
 
-    const chartData = Object.keys(salesByCategory).map(category => ({
-        name: category,
-        sales: salesByCategory[category]
-    }));
+        function ExportButton({ data, filename }) {
+            const handleExport = () => {
+                if (!data || data.length === 0) {
+                    console.error("No data to export.");
+                    return;
+                }
+                const csvRows = [];
+                const headers = Object.keys(data[0]);
+                csvRows.push(headers.join(','));
+                for (const row of data) {
+                    const values = headers.map(header => {
+                        const value = row[header];
+                        const escaped = ('' + value).replace(/"/g, '""');
+                        return `"${escaped}"`;
+                    });
+                    csvRows.push(values.join(','));
+                }
+                const csvString = csvRows.join('\n');
+                const blob = new Blob([csvString], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.setAttribute('hidden', '');
+                a.setAttribute('href', url);
+                a.setAttribute('download', `${filename}.csv`);
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            };
+            return (
+                <button
+                    onClick={handleExport}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition-colors flex items-center gap-2"
+                >
+                    <span className="w-4 h-4">⬇️</span>
+                    Export
+                </button>
+            );
+        }
 
-    return (
-        <div className="animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">Financials</h1>
-                <ExportButton data={completedOrders} filename="financials_report" />
-            </div>
-            <div className="grid gap-4 md:grid-cols-3 mb-6">
-                 <Card
-                    title="Gross Sales"
-                    icon={<DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-                    value={`$${grossSales.toFixed(2)}`}
-                    description="Total revenue from all sales"
-                />
-                 <Card
-                    title="Cost of Goods Sold (COGS)"
-                    icon={<DollarSign className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
-                    value={`$${cogs.toFixed(2)}`}
-                    description="Total cost of ingredients sold"
-                />
-                 <Card
-                    title="Net Profit"
-                    icon={<DollarSign className="h-4 w-4 text-green-500" />}
-                    value={`$${netProfit.toFixed(2)}`}
-                    description="Gross Sales - COGS"
-                />
-            </div>
-             <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-6">
-                <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Sales Breakdown by Category</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={chartData}>
-                        <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
-                        <Tooltip />
-                        <Bar dataKey="sales" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
-            </div>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
-                 <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-white">Detailed Sales Report</h3>
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                            <tr>
-                                <th scope="col" className="px-6 py-3">Order ID</th>
-                                <th scope="col" className="px-6 py-3">Date</th>
-                                <th scope="col" className="px-6 py-3">Total</th>
-                                <th scope="col" className="px-6 py-3">Cost</th>
-                                <th scope="col" className="px-6 py-3">Profit</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {completedOrders.map(order => {
-                                const orderCost = order.items.reduce((itemSum, item) => itemSum + item.cost, 0);
-                                const orderProfit = order.total - orderCost;
-                                return (
-                                    <tr key={order.id} className="bg-white border-b dark:bg-gray-900 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
-                                        <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{order.id}</td>
-                                        <td className="px-6 py-4">{order.date.toLocaleString()}</td>
-                                        <td className="px-6 py-4">${order.total.toFixed(2)}</td>
-                                        <td className="px-6 py-4">${orderCost.toFixed(2)}</td>
-                                        <td className="px-6 py-4">${orderProfit.toFixed(2)}</td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+        function Announcements() {
+            const [announcements, setAnnouncements] = useState(initialAnnouncements.slice(0, 3));
+            return (
+                <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
+                    <div className="flex justify-between items-center mb-3">
+                        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Announcements</h2>
+                        <span className="h-5 w-5 text-gray-500 dark:text-gray-400">📣</span>
+                    </div>
+                    <div className="space-y-4">
+                        {announcements.map((announcement) => (
+                            <div key={announcement.id} className="pb-2 border-b last:border-b-0 dark:border-gray-700">
+                                <p className="font-medium text-gray-900 dark:text-white">{announcement.author}: {announcement.message}</p>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">{announcement.timestamp.toLocaleString()}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-            </div>
-        </div>
-    );
-}
-
-// Announcements Page Component
-function AnnouncementsPage() {
-    const [announcements, setAnnouncements] = useState(initialAnnouncements);
-    const [newAnnouncement, setNewAnnouncement] = useState('');
-
-    const handlePostAnnouncement = (e) => {
-        e.preventDefault();
-        if (newAnnouncement.trim()) {
-            const newId = announcements.length > 0 ? Math.max(...announcements.map(a => a.id)) + 1 : 1;
-            setAnnouncements([
-                { id: newId, author: 'Manager', message: newAnnouncement, timestamp: new Date() },
-                ...announcements,
-            ]);
-            setNewAnnouncement('');
-        }
-    };
-
-    return (
-        <div className="animate-fade-in">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Announcements</h1>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4 mb-6">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Post a New Announcement</h3>
-                <form onSubmit={handlePostAnnouncement} className="flex flex-col sm:flex-row gap-2">
-                    <input 
-                        type="text" 
-                        value={newAnnouncement}
-                        onChange={(e) => setNewAnnouncement(e.target.value)}
-                        placeholder="Type your announcement here..."
-                        className="flex-1 rounded-lg border-gray-300 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                        required
-                    />
-                    <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-colors">
-                        Post
-                    </button>
-                </form>
-            </div>
-            <div className="space-y-4">
-                {announcements.map(announcement => (
-                    <div key={announcement.id} className="bg-white dark:bg-gray-900 p-4 rounded-lg shadow-sm">
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="font-semibold text-gray-900 dark:text-white">{announcement.author}</span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400">{announcement.timestamp.toLocaleString()}</span>
-                        </div>
-                        <p className="text-gray-700 dark:text-gray-300">{announcement.message}</p>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-
-// Settings Page Component
-function SettingsPage() {
-    return (
-        <div className="animate-fade-in">
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Settings</h1>
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-6">
-                <p className="text-gray-700 dark:text-gray-300">Settings and configuration options would go here. For example, managing user roles, notification preferences, or business details.</p>
-            </div>
-        </div>
-    );
-}
-
-// Helper Components
-function Card({ title, value, description, icon }) {
-    return (
-        <div className="rounded-lg border bg-white text-card-foreground shadow-sm dark:bg-gray-900 p-6">
-            <div className="flex justify-between items-center pb-2">
-                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
-                {icon}
-            </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{value}</div>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{description}</p>
-        </div>
-    );
-}
-
-function StatusBadge({ status }) {
-    let colorClass = '';
-    switch (status) {
-        case 'New':
-            colorClass = 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
-            break;
-        case 'Preparing':
-            colorClass = 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-            break;
-        case 'Ready':
-            colorClass = 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
-            break;
-        case 'Completed':
-            colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-            break;
-        case 'Cancelled':
-            colorClass = 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-            break;
-        default:
-            colorClass = 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    }
-    return (
-        <span className={`text-xs font-medium me-2 px-2.5 py-0.5 rounded-full ${colorClass}`}>
-            {status}
-        </span>
-    );
-}
-
-function ExportButton({ data, filename }) {
-    const handleExport = () => {
-        if (!data || data.length === 0) {
-            console.error("No data to export.");
-            return;
+            );
         }
 
-        // Convert data to CSV format
-        const csvRows = [];
-        const headers = Object.keys(data[0]);
-        csvRows.push(headers.join(','));
-
-        for (const row of data) {
-            const values = headers.map(header => {
-                const value = row[header];
-                const escaped = ('' + value).replace(/"/g, '""'); // Escape double quotes
-                return `"${escaped}"`;
-            });
-            csvRows.push(values.join(','));
-        }
-
-        const csvString = csvRows.join('\n');
-        const blob = new Blob([csvString], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.setAttribute('hidden', '');
-        a.setAttribute('href', url);
-        a.setAttribute('download', `${filename}.csv`);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    };
-
-    return (
-        <button
-            onClick={handleExport}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg shadow hover:bg-green-700 transition-colors flex items-center gap-2"
-        >
-            <Download className="w-4 h-4" />
-            Export
-        </button>
-    );
-}
-
-// Announcements Component for Dashboard
-function Announcements() {
-    const [announcements, setAnnouncements] = useState(initialAnnouncements.slice(0, 3));
-    return (
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm p-4">
-            <div className="flex justify-between items-center mb-3">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Announcements</h2>
-                <MessageSquare className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-            </div>
-            <div className="space-y-4">
-                {announcements.map((announcement) => (
-                    <div key={announcement.id} className="pb-2 border-b last:border-b-0 dark:border-gray-700">
-                        <p className="font-medium text-gray-900 dark:text-white">{announcement.author}: {announcement.message}</p>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{announcement.timestamp.toLocaleString()}</span>
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-}
-
-// SettingsPage is already defined
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
